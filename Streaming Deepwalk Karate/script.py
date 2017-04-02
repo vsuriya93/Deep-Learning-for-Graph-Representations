@@ -1,0 +1,135 @@
+#Deepwalk - Suriya - 22/07/16
+from matplotlib import pyplot as plt
+from collections import defaultdict
+from gensim.models import Word2Vec
+from plot import plot_output
+import random
+import numpy as np
+import os
+
+number_of_walks_per_node=10
+rand=random.Random(0)
+filename="combined.csv"
+graph=defaultdict(list)
+embedding_size=2
+undirected=True
+path=os.getcwd()+'/images/'
+color=['b' if x<9476 else 'r' for x in range(len(graph.keys()))]
+stream_buffer=100
+
+def random_walk(graph,start,rand=random.Random(0),length=40,restart=0):
+    walk=[start]
+    node=start
+    while len(walk)<length:
+        if len(graph[node])>0:
+            alpha=random.random()
+            if alpha >=restart:
+                next_node=rand.choice(graph[node])
+                walk.append(next_node)
+                node=next_node
+            else:
+                #next_node=rand.choice(graph[start])
+                walk.append(start)
+                node=start
+        else:
+            break
+    return walk
+
+def read_edge_list(file_name,graph,undirected=True):
+    filename=open(file_name)
+    for row in filename:
+        row_processed=map(int,row.strip().split(","))
+        #graph[row_processed[0]].append(row_processed[1])
+        graph[row_processed[0]]
+        if undirected:
+            #graph[row_processed[1]].append(row_processed[0])
+            graph[row_processed[1]]
+
+def build_data_matrix(graph,number_of_walks_per_node=10,rand=random.Random(0),restart=0):
+    data=[]
+    nodes=graph.keys()
+    for _ in xrange(number_of_walks_per_node):
+        rand.shuffle(nodes)
+        for vertex in nodes:
+            walk=random_walk(graph=graph,start=vertex,rand=rand,restart=restart)
+            data.append(walk)
+    return data
+
+def build_word2vec_model(data,embedding_size=2,save=True):
+    model=Word2Vec(data,min_count=0,size=2)
+    if save:
+        model.save_word2vec_format('output')
+    return model
+
+def build_streaming_edge_data(edge,graph,number_of_walks_per_node,rand=random.Random(0),restart=0):
+    data=[]
+    nodes=edge
+    for _ in xrange(number_of_walks_per_node):
+        rand.shuffle(nodes)
+        for vertex in nodes:
+            walk=random_walk(graph=graph,start=vertex,rand=rand,restart=restart)
+            data.append(walk)
+    return data
+
+def create_image(array,color,filename):
+    plt.scatter(array[:,0],array[:,1],c=color)
+    plt.savefig(filename)
+
+def read_adj_file(file_name,graph,neighbourhood_propagation=False):
+    filename=open(file_name)
+    for row in filename:
+        row_processed=row.strip().split(" ",1)
+        adj_list=row_processed[1].split()
+        #adj_list=row_processed[1]
+        adj_list=map(int,adj_list)
+        for element in adj_list:
+            graph[int(row_processed[0])].append(element)
+            #graph[row_processed[0]].append(element)
+    if neighbourhood_propagation:
+        temp_graph=defaultdict(list)
+        nodes=list(graph.keys())
+        for node in nodes:
+            adj_list=graph[node]
+            for element in adj_list:
+                if element not in temp_graph[node]:
+                    temp_graph[node].append(element)
+                next_adj_list=graph[element]
+                for next_adj_list_element in next_adj_list:
+                    if next_adj_list_element not in temp_graph[node]:
+                        temp_graph[node].append(next_adj_list_element)
+                
+        for element in temp_graph.keys():
+            #temp_graph[element].sort()
+            graph[element]=temp_graph[element]
+
+
+read_adj_file('input', graph)
+#print "finished building the graph",len(graph.keys())
+#data=build_data_matrix(graph,number_of_walks_per_node,rand=rand)
+#print "finished building the data matrix now going for training",len(data),len(data[0])
+#build_word2vec_model(data,embedding_size=embedding_size,save=True)
+new_graph=defaultdict(list)
+for key,value in enumerate(graph):
+	new_graph[key]
+print new_graph
+print graph
+model=Word2Vec(min_count=0,size=2)
+model.build_vocab([graph.keys()])
+#filename=open(filename,'r')
+count=0
+temp=[]
+times=0
+for key in graph:
+    value=graph[key]
+    for el in value:
+    	new_graph[key].append(el)
+    	new_graph[el].append(key)
+    	random
+        data=build_streaming_edge_data([key,el],graph,number_of_walks_per_node)
+        print data
+        model.train(data)
+    count+=1
+
+model.save_word2vec_format('output_stream')
+#print "training over now plotting"
+plot_output('output')
